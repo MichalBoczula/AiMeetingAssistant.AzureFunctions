@@ -4,13 +4,26 @@ import os
 
 import azure.functions as func
 
+from application.screenshot_analysis_service import ScreenshotAnalysisService
 from application.screenshot_request_validator import validate_screenshot_request
+from infrastructure.signalr.signalr_message_serializer import SignalRMessageSerializer
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
+analysis_service = ScreenshotAnalysisService()
+signalr_message_serializer = SignalRMessageSerializer()
 
+
+@app.generic_output_binding(
+    arg_name="signalr_messages",
+    type="signalR",
+    hubName="meeting",
+    connectionStringSetting="AzureSignalRConnectionString",
+)
 @app.route(route="analyze-screenshot", methods=["POST"])
-def analyze_screenshot(req: func.HttpRequest) -> func.HttpResponse:
+def analyze_screenshot(
+    req: func.HttpRequest, signalr_messages: func.Out[str]
+) -> func.HttpResponse:
     logging.info("Analyze screenshot request received.")
 
     request_id = req.form.get("requestId")
@@ -29,7 +42,21 @@ def analyze_screenshot(req: func.HttpRequest) -> func.HttpResponse:
     if error_code is not None:
         return json_response({"errorCode": error_code}, 400)
 
+    analysis_completed = analysis_service.analyze(request_id=request_id, session_id=session_id)
+    signalr_messages.set(signalr_message_serializer.serialize(analysis_completed))
+
     return json_response({"requestId": request_id, "status": "accepted"}, 202)
+
+
+@app.generic_input_binding(
+    arg_name="connection_info",
+    type="signalRConnectionInfo",
+    hubName="meeting",
+    connectionStringSetting="AzureSignalRConnectionString",
+)
+@app.route(route="negotiate", methods=["POST"])
+def negotiate(_req: func.HttpRequest, connection_info: str) -> func.HttpResponse:
+    return func.HttpResponse(connection_info, status_code=200, mimetype="application/json")
 
 
 def get_max_image_size_bytes() -> int:
