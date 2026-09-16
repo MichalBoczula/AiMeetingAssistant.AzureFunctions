@@ -55,7 +55,7 @@ def analyze_screenshot(
     connectionStringSetting="AzureSignalRConnectionString",
 )
 @app.route(route="negotiate", methods=["POST"])
-def negotiate(_req: func.HttpRequest, connection_info: str) -> func.HttpResponse:
+def negotiate(req: func.HttpRequest, connection_info: str) -> func.HttpResponse:
     return func.HttpResponse(connection_info, status_code=200, mimetype="application/json")
 
 
