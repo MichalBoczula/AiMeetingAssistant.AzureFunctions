@@ -1,0 +1,106 @@
+AI Meeting Assistant - Azure SignalR deployment summary
+===========================================================
+
+Status
+------
+- Python Azure Function was deployed successfully.
+- Deployed Function App:
+  func-ai-meeting-assistant-dev-mb
+- Resource group:
+  rg-ai-meeting-assistant-dev
+- Region:
+  Poland Central
+- SignalR resource:
+  sigr-ai-meeting-assistant-dev-mb
+- SignalR hub name:
+  meeting
+
+Function endpoints
+------------------
+POST https://func-ai-meeting-assistant-dev-mb-btdeargfegebefhb.polandcentral-01.azurewebsites.net/api/analyze-screenshot
+POST https://func-ai-meeting-assistant-dev-mb-btdeargfegebefhb.polandcentral-01.azurewebsites.net/api/negotiate
+
+Managed Identity configuration
+------------------------------
+The Function App uses the existing user-assigned managed identity:
+
+func-ai-meeting-assistant-dev-mb-uami
+
+The identity must have the following role on the SignalR resource:
+
+SignalR Service Owner
+
+The deployed Function App uses identity-based SignalR binding settings:
+
+AzureSignalRConnectionString__serviceUri
+https://sigr-ai-meeting-assistant-dev-mb.service.signalr.net
+
+AzureSignalRConnectionString__credential
+managedidentity
+
+AzureSignalRConnectionString__clientId
+<Client ID of func-ai-meeting-assistant-dev-mb-uami>
+
+No Azure SignalR connection string or other SignalR secret is stored in the application.
+
+CORS
+----
+The Function App must allow the local Angular development origin:
+
+http://localhost:4200
+
+When Angular is deployed, add its production URL as an additional allowed origin.
+
+Deployment command
+------------------
+From the Python Function repository:
+
+func azure functionapp publish func-ai-meeting-assistant-dev-mb --python --build remote
+
+What works now
+--------------
+- POST /api/analyze-screenshot validates the incoming screenshot.
+- The Function publishes an AiAnalysisCompleted SignalR event.
+- POST /api/negotiate issues the short-lived URL and access token used by the SignalR client.
+- Azure SignalR owns the persistent connection to browser clients; the Function remains stateless and thin.
+
+Important local-development note
+--------------------------------
+Local Azurite is not required for the deployed-infrastructure test.
+For deployed SignalR testing, use the deployed Function endpoint and a local Angular client.
+
+Next MVP steps
+--------------
+1. Angular configuration
+   - Change the SignalR negotiate URL from localhost:7071 to the deployed /api/negotiate endpoint.
+   - Keep the Angular app local.
+   - Start Angular and verify it receives AiAnalysisCompleted after a curl upload.
+
+2. End-to-end transport test
+   - Send a valid PNG to the deployed /api/analyze-screenshot endpoint.
+   - Verify the Function returns HTTP 202.
+   - Verify the local Angular page changes from "Waiting for AI analysis." to the temporary analysis text.
+
+3. Deploy Angular
+   - Host the static Angular application in Azure.
+   - Add the production Angular URL to Function App CORS.
+   - Repeat the SignalR transport test with both Function and Angular deployed.
+
+4. Add Foundry
+   - Replace the temporary analysis text with a Foundry adapter.
+   - Authenticate Function -> Foundry through the existing UAMI.
+   - Keep Foundry infrastructure behind an interface.
+   - Add unit tests for the application-level analysis component.
+
+5. Session isolation and Desktop
+   - Use meeting-{sessionId} SignalR groups instead of broadcast.
+   - Configure the Desktop endpoint to the deployed analyze-screenshot URL.
+   - Verify:
+     Desktop -> Function -> Foundry -> SignalR -> Angular
+
+Out of scope for this MVP
+-------------------------
+- Queues
+- Durable Functions
+- Service Bus
+- Additional persistence or infrastructure
