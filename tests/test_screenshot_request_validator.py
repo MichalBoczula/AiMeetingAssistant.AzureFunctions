@@ -2,8 +2,8 @@ import pytest
 
 from application.screenshot_request_validator import validate_screenshot_request
 
-PNG = b"\\x89PNG\\r\\n\\x1a\\ncontent"
-JPEG = b"\\xff\\xd8\\xffcontent"
+PNG = b"\x89PNG\r\n\x1a\ncontent"
+JPEG = b"\xff\xd8\xffcontent"
 WEBP = b"RIFFxxxxWEBPcontent"
 
 
