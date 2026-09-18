@@ -5,6 +5,8 @@ from azure.ai.projects import AIProjectClient
 from azure.identity import DefaultAzureCredential
 from openai import OpenAI
 
+DEFAULT_OPENAI_API_VERSION = "2024-10-21"
+
 
 class AzureFoundryScreenshotAnalyzer:
     def __init__(self, client: OpenAI, deployment_name: str):
@@ -67,7 +69,9 @@ def create_azure_foundry_screenshot_analyzer() -> AzureFoundryScreenshotAnalyzer
     )
 
     return AzureFoundryScreenshotAnalyzer(
-        project_client.get_openai_client(),
+        project_client.get_openai_client(
+            api_version=os.getenv("OPENAI_API_VERSION", DEFAULT_OPENAI_API_VERSION),
+        ),
         deployment_name,
     )
 
