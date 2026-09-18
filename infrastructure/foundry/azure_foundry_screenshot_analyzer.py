@@ -1,14 +1,8 @@
 import base64
 import os
-from typing import Protocol
 
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from openai import AzureOpenAI
-
-
-class ChatCompletionsClient(Protocol):
-    def create(self, **kwargs: object) -> object:
-        ...
 
 
 class AzureFoundryScreenshotAnalyzer:
