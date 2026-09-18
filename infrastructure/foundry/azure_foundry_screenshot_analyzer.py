@@ -1,12 +1,13 @@
 import base64
 import os
 
-from azure.identity import DefaultAzureCredential, get_bearer_token_provider
-from openai import AzureOpenAI
+from azure.ai.projects import AIProjectClient
+from azure.identity import DefaultAzureCredential
+from openai import OpenAI
 
 
 class AzureFoundryScreenshotAnalyzer:
-    def __init__(self, client: AzureOpenAI, deployment_name: str):
+    def __init__(self, client: OpenAI, deployment_name: str):
         self._client = client
         self._deployment_name = deployment_name
 
@@ -54,24 +55,21 @@ class AzureFoundryScreenshotAnalyzer:
 
 
 def create_azure_foundry_screenshot_analyzer() -> AzureFoundryScreenshotAnalyzer:
-    endpoint = get_required_environment_variable("AZURE_OPENAI_ENDPOINT")
+    project_endpoint = get_required_environment_variable("AZURE_AI_PROJECT_ENDPOINT")
     deployment_name = get_required_environment_variable("AZURE_OPENAI_DEPLOYMENT")
     managed_identity_client_id = os.getenv("AZURE_CLIENT_ID")
 
-    credential = DefaultAzureCredential(
-        managed_identity_client_id=managed_identity_client_id,
-    )
-    token_provider = get_bearer_token_provider(
-        credential,
-        "https://cognitiveservices.azure.com/.default",
-    )
-    client = AzureOpenAI(
-        azure_endpoint=endpoint,
-        api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-10-21"),
-        azure_ad_token_provider=token_provider,
+    project_client = AIProjectClient(
+        endpoint=project_endpoint,
+        credential=DefaultAzureCredential(
+            managed_identity_client_id=managed_identity_client_id,
+        ),
     )
 
-    return AzureFoundryScreenshotAnalyzer(client, deployment_name)
+    return AzureFoundryScreenshotAnalyzer(
+        project_client.get_openai_client(),
+        deployment_name,
+    )
 
 
 def create_image_data_url(screenshot_content: bytes, screenshot_content_type: str) -> str:
