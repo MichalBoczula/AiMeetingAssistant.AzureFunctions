@@ -5,7 +5,6 @@ from azure.ai.projects import AIProjectClient
 from azure.identity import DefaultAzureCredential
 from openai import OpenAI
 
-DEFAULT_OPENAI_API_VERSION = "2024-10-21"
 SCREEN_ANSWER_SYSTEM_PROMPT = (
     "Answer the question or task shown in the screenshot. Focus only on the relevant "
     "question and its answer options. Return only the final answer. For multiple-choice "
@@ -71,9 +70,7 @@ def create_azure_foundry_screenshot_analyzer() -> AzureFoundryScreenshotAnalyzer
     )
 
     return AzureFoundryScreenshotAnalyzer(
-        project_client.get_openai_client(
-            api_version=os.getenv("OPENAI_API_VERSION", DEFAULT_OPENAI_API_VERSION),
-        ),
+        project_client.get_openai_client(),
         deployment_name,
     )
 
