@@ -6,6 +6,13 @@ from azure.identity import DefaultAzureCredential
 from openai import OpenAI
 
 DEFAULT_OPENAI_API_VERSION = "2024-10-21"
+SCREEN_ANSWER_SYSTEM_PROMPT = (
+    "Answer the question or task shown in the screenshot. Focus only on the relevant "
+    "question and its answer options. Return only the final answer. For multiple-choice "
+    "questions, return the option label and answer text. Do not describe the screenshot, "
+    "the interface, or the question. Do not add an explanation, headings, markdown, or "
+    "any introductory text. If no question or task is visible, return 'No question found.'."
+)
 
 
 class AzureFoundryScreenshotAnalyzer:
@@ -19,19 +26,14 @@ class AzureFoundryScreenshotAnalyzer:
             messages=[
                 {
                     "role": "system",
-                    "content": (
-                        "You are a concise AI meeting assistant. Analyze the supplied "
-                        "screenshot and provide a practical answer based only on visible content. "
-                        "Use the language visible in the screenshot when possible. "
-                        "If the screenshot does not contain enough information, say so plainly."
-                    ),
+                    "content": SCREEN_ANSWER_SYSTEM_PROMPT,
                 },
                 {
                     "role": "user",
                     "content": [
                         {
                             "type": "text",
-                            "text": "Analyze this screenshot for the meeting participant.",
+                            "text": "Answer the question in this screenshot.",
                         },
                         {
                             "type": "image_url",
