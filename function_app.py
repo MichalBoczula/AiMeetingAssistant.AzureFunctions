@@ -7,8 +7,8 @@ import azure.functions as func
 
 from application.screenshot_analysis_service import ScreenshotAnalysisService
 from application.screenshot_request_validator import validate_screenshot_request
-from infrastructure.foundry.azure_foundry_screenshot_analyzer import (
-    create_azure_foundry_screenshot_analyzer,
+from infrastructure.foundry.azure_foundry_web_search_screenshot_analyzer import (
+    create_azure_foundry_web_search_screenshot_analyzer,
 )
 from infrastructure.signalr.signalr_message_serializer import SignalRMessageSerializer
 
@@ -75,7 +75,9 @@ def negotiate(req: func.HttpRequest, connection_info: str) -> func.HttpResponse:
 
 @lru_cache
 def get_analysis_service() -> ScreenshotAnalysisService:
-    return ScreenshotAnalysisService(create_azure_foundry_screenshot_analyzer())
+    return ScreenshotAnalysisService(
+        create_azure_foundry_web_search_screenshot_analyzer()
+    )
 
 
 def get_max_image_size_bytes() -> int:
