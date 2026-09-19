@@ -3,6 +3,7 @@ from types import SimpleNamespace
 import pytest
 
 from infrastructure.foundry.azure_foundry_screenshot_analyzer import (
+    SCREEN_ANSWER_SYSTEM_PROMPT,
     AzureFoundryScreenshotAnalyzer,
     create_image_data_url,
 )
@@ -25,8 +26,8 @@ class FakeAzureOpenAiClient:
         self.chat = SimpleNamespace(completions=completions)
 
 
-def test_analyze_sends_base64_encoded_image_to_foundry_and_returns_text() -> None:
-    completions = RecordingCompletions("The deadline is Friday.")
+def test_analyze_sends_base64_encoded_image_and_answer_only_prompt_to_foundry() -> None:
+    completions = RecordingCompletions("b. Analyze text")
     analyzer = AzureFoundryScreenshotAnalyzer(
         FakeAzureOpenAiClient(completions),
         "gpt-5.4-mini",
@@ -34,11 +35,13 @@ def test_analyze_sends_base64_encoded_image_to_foundry_and_returns_text() -> Non
 
     result = analyzer.analyze(b"png-content", "image/png")
 
-    assert result == "The deadline is Friday."
+    assert result == "b. Analyze text"
     assert completions.kwargs is not None
     assert completions.kwargs["model"] == "gpt-5.4-mini"
     assert completions.kwargs["max_completion_tokens"] == 500
     messages = completions.kwargs["messages"]
+    assert messages[0]["content"] == SCREEN_ANSWER_SYSTEM_PROMPT
+    assert "Return only the final answer." in SCREEN_ANSWER_SYSTEM_PROMPT
     assert messages[1]["content"][1]["image_url"]["url"] == (
         "data:image/png;base64,cG5nLWNvbnRlbnQ="
     )
