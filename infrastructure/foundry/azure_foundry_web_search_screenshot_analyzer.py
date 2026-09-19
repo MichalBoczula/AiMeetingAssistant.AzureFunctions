@@ -17,9 +17,8 @@ WEB_GROUNDED_SCREENSHOT_PROMPT = (
 
 
 class AzureFoundryWebSearchScreenshotAnalyzer:
-    def __init__(self, client: OpenAI, agent_name: str):
+    def __init__(self, client: OpenAI):
         self._client = client
-        self._agent_name = agent_name
 
     def analyze(self, screenshot_content: bytes, screenshot_content_type: str) -> str:
         response = self._client.responses.create(
@@ -43,12 +42,6 @@ class AzureFoundryWebSearchScreenshotAnalyzer:
                 }
             ],
             tool_choice="required",
-            extra_body={
-                "agent_reference": {
-                    "name": self._agent_name,
-                    "type": "agent_reference",
-                }
-            },
         )
 
         if not response.output_text:
@@ -69,11 +62,11 @@ def create_azure_foundry_web_search_screenshot_analyzer() -> (
         credential=DefaultAzureCredential(
             managed_identity_client_id=managed_identity_client_id,
         ),
+        allow_preview=True,
     )
 
     return AzureFoundryWebSearchScreenshotAnalyzer(
-        project_client.get_openai_client(),
-        agent_name,
+        project_client.get_openai_client(agent_name=agent_name),
     )
 
 
