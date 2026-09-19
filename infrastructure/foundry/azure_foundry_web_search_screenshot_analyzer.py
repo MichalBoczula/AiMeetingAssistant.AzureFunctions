@@ -5,7 +5,6 @@ from azure.ai.projects import AIProjectClient
 from azure.identity import DefaultAzureCredential
 from openai import OpenAI
 
-DEFAULT_OPENAI_API_VERSION = "2024-10-21"
 WEB_GROUNDED_SCREENSHOT_PROMPT = (
     "Read the complete technical question in the screenshot, including every requirement, "
     "diagram, table, statement, and answer choice. Use the configured web search tool before "
@@ -73,9 +72,7 @@ def create_azure_foundry_web_search_screenshot_analyzer() -> (
     )
 
     return AzureFoundryWebSearchScreenshotAnalyzer(
-        project_client.get_openai_client(
-            api_version=os.getenv("OPENAI_API_VERSION", DEFAULT_OPENAI_API_VERSION),
-        ),
+        project_client.get_openai_client(),
         agent_name,
     )
 
