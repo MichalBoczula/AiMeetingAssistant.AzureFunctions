@@ -4,7 +4,9 @@ import os
 from functools import lru_cache
 
 import azure.functions as func
+from openai import RateLimitError
 
+from application.analysis_failed import AnalysisFailed
 from application.screenshot_analysis_service import ScreenshotAnalysisService
 from application.screenshot_request_validator import validate_screenshot_request
 from infrastructure.foundry.azure_foundry_web_search_screenshot_analyzer import (
@@ -53,6 +55,16 @@ def analyze_screenshot(
             screenshot_content=screenshot_content,
             screenshot_content_type=screenshot_content_type,
         )
+    except RateLimitError:
+        logging.warning("Screenshot analysis rate limited.")
+        analysis_failed = AnalysisFailed(
+            request_id=request_id,
+            session_id=session_id,
+            error_code="RATE_LIMITED",
+            message="AI is temporarily busy. Please try again in about a minute.",
+        )
+        signalr_messages.set(signalr_message_serializer.serialize_failed(analysis_failed))
+        return json_response({"errorCode": analysis_failed.error_code}, 429)
     except Exception:
         logging.exception("Screenshot analysis failed.")
         return json_response({"errorCode": "ANALYSIS_UNAVAILABLE"}, 502)
