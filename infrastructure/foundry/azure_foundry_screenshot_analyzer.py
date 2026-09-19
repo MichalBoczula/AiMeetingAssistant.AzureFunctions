@@ -7,11 +7,15 @@ from openai import OpenAI
 
 DEFAULT_OPENAI_API_VERSION = "2024-10-21"
 SCREEN_ANSWER_SYSTEM_PROMPT = (
-    "Answer the question or task shown in the screenshot. Focus only on the relevant "
-    "question and its answer options. Return only the final answer. For multiple-choice "
-    "questions, return the option label and answer text. Do not describe the screenshot, "
-    "the interface, or the question. Do not add an explanation, headings, markdown, or "
-    "any introductory text. If no question or task is visible, return 'No question found.'."
+    "Solve the technical question shown in the screenshot. Read all visible question text, "
+    "requirements, diagrams, tables, and answer choices before deciding. Reason silently from "
+    "reliable technical knowledge. Never invent facts or guess. If the screenshot is unreadable "
+    "or the answer cannot be determined with sufficient confidence, return exactly "
+    "'UNSURE: <what information is missing>'. Return only the answer the user can select: for a "
+    "multiple-choice question, return the option label and its text; for a Yes/No matrix, return "
+    "one line per application in the format '<application>: Yes' or '<application>: No'. Do not "
+    "describe the screenshot, restate the question, add an explanation, headings, markdown, or "
+    "introductory text."
 )
 
 
@@ -33,7 +37,7 @@ class AzureFoundryScreenshotAnalyzer:
                     "content": [
                         {
                             "type": "text",
-                            "text": "Answer the question in this screenshot.",
+                            "text": "Read the complete question and return the selectable answer.",
                         },
                         {
                             "type": "image_url",
